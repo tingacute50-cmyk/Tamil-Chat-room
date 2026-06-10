@@ -1,0 +1,611 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tamil World Chatroom</title>
+    <style>
+        :root {
+            --bg-color: #09090e;
+            --panel-bg: #111424;
+            --accent-gold: #ffaa00; 
+            --neon-pink: #ff2a85;
+            --neon-cyan: #00f3ff;
+            --neon-green: #39ff14;
+            --danger-color: #ff3333;
+            --text-main: #ffffff;
+            --text-muted: #828fa9;
+            --border-glow: #222947;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 50%, #1a153a 0%, #09090e 100%);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Screens Styling */
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 440px;
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 0 30px rgba(255, 42, 133, 0.2);
+            border: 1px solid var(--neon-pink);
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 26px;
+            text-align: center;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 12px;
+            background: #070914;
+            border: 1px solid var(--border-glow);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        select option {
+            background: var(--panel-bg);
+            color: #fff;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, var(--neon-pink), var(--accent-gold));
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(255, 42, 133, 0.4);
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.02);
+            opacity: 0.95;
+        }
+
+        .switch-text {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .switch-text span {
+            color: var(--neon-cyan);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .error-msg {
+            color: var(--danger-color);
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+            font-weight: bold;
+        }
+
+        /* Highly Colorful Chatroom Layout */
+        #main-chat-screen {
+            max-width: 1150px;
+            width: 95%;
+            height: 85vh;
+            padding: 0;
+            display: none;
+            grid-template-columns: 290px 1fr;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 2px solid #2b1f54;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+        }
+
+        #main-chat-screen.active {
+            display: grid;
+        }
+
+        /* Sidebar Color Burst */
+        .sidebar {
+            background: linear-gradient(180deg, #0f1021 0%, #171236 100%);
+            border-right: 2px solid #2b1f54;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .room-header {
+            padding: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--accent-gold);
+            text-shadow: 0 0 12px rgba(255, 170, 0, 0.4);
+            border-bottom: 1px solid #2b1f54;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .user-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .list-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 15px 0 10px 5px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+        }
+
+        .title-online { color: var(--neon-green); text-shadow: 0 0 5px rgba(57, 255, 20, 0.3); }
+        .title-offline { color: #6b7280; }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .online-user { 
+            border-left: 3px solid var(--neon-green); 
+            color: #e2e8f0;
+        }
+        .online-user .status-dot { 
+            background: var(--neon-green); 
+            box-shadow: 0 0 8px var(--neon-green);
+        }
+        
+        .offline-user { 
+            border-left: 3px solid #4b5563; 
+            color: #4b5563; 
+            background: transparent;
+        }
+        .offline-user .status-dot { background: #4b5563; }
+
+        /* Bright Vibrant Blurred Chat Window */
+        .chat-area {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background: #0d0e17;
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 2px solid #2b1f54;
+            font-weight: bold;
+            color: var(--neon-cyan);
+            font-size: 16px;
+            background: rgba(255,255,255,0.01);
+        }
+
+        /* Vivid Neon Blurred Panels */
+        .messages-mock {
+            flex: 1;
+            padding: 25px;
+            pointer-events: none;
+            filter: blur(12px); 
+            opacity: 0.75;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .mock-msg {
+            padding: 18px;
+            border-radius: 12px;
+            max-width: 65%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .msg-1 { background: linear-gradient(135deg, #0c2340, #1d4ed8); border: 1px solid var(--neon-cyan); }
+        .msg-2 { background: linear-gradient(135deg, #2d0b3d, #6d28d9); border: 1px solid #c084fc; align-self: flex-end;}
+        .msg-3 { background: linear-gradient(135deg, #063025, #047857); border: 1px solid var(--neon-green); }
+        .msg-4 { background: linear-gradient(135deg, #4c0519, #be123c); border: 1px solid var(--neon-pink); }
+
+        /* Security Intervention Overlay */
+        .overlay-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 10, 0.75);
+            backdrop-filter: blur(2px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .waiting-card {
+            background: #14112c;
+            border: 2px solid var(--neon-cyan);
+            padding: 35px;
+            border-radius: 14px;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.2);
+        }
+
+        /* Neon Admin Danger Box */
+        .admin-popup {
+            background: #191224;
+            border: 2px solid var(--neon-pink);
+            width: 90%;
+            max-width: 410px;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 0 35px rgba(255, 42, 133, 0.5);
+            text-align: center;
+            display: none;
+        }
+
+        .admin-header {
+            color: var(--neon-pink);
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(255, 42, 133, 0.4);
+        }
+
+        .admin-timer {
+            font-size: 36px;
+            color: var(--accent-gold);
+            font-weight: bold;
+            margin: 15px 0;
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.4);
+        }
+
+        .generated-code-display {
+            background: #000;
+            color: var(--accent-gold);
+            padding: 8px;
+            font-family: monospace;
+            font-size: 18px;
+            letter-spacing: 2px;
+            border-radius: 6px;
+            margin: 10px auto;
+            width: fit-content;
+            border: 1px dashed var(--accent-gold);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. REGISTRATION SCREEN -->
+    <div id="register-screen" class="screen active">
+        <h2>Create Account</h2>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="reg-username" placeholder="Choose a username">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="reg-password" placeholder="Create a password">
+        </div>
+        
+        <div class="form-row">
+            <div>
+                <label>Gender</label>
+                <select id="reg-gender">
+                    <option value="" disabled selected>Select</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label>Age</label>
+                <select id="reg-age">
+                    <option value="" disabled selected>Select</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="handleRegister()">Sign Up</button>
+        <div class="switch-text">
+            Already have an account? <span onclick="switchScreen('login-screen')">Login</span>
+        </div>
+    </div>
+
+    <!-- 2. LOGIN SCREEN -->
+    <div id="login-screen" class="screen">
+        <h2>Tamil World Login</h2>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="login-username" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="Enter password">
+        </div>
+        <button onclick="handleLogin()">Login</button>
+        <div id="login-error" class="error-msg">Invalid credentials</div>
+        <div class="switch-text">
+            Need an account? <span onclick="switchScreen('register-screen')">Sign Up</span>
+        </div>
+    </div>
+
+    <!-- 3. CHATROOM SYSTEM DASHBOARD -->
+    <div id="main-chat-screen" class="screen">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="room-header">🌈 Tamil World Chat</div>
+            
+            <div class="user-list-container">
+                <div class="list-section-title title-online">
+                    <span>🟢 Active Online</span>
+                    <span>25</span>
+                </div>
+                <div class="user-item online-user">
+                    <span class="status-dot"></span><strong>Anbarasan_Pandi</strong>
+                </div>
+                <div class="user-item online-user">
+                    <span class="status-dot"></span><strong>Siva_Surya</strong>
+                </div>
+                <div class="user-item online-user">
+                    <span class="status-dot"></span><strong>Kavitha_M</strong>
+                </div>
+                <div class="user-item online-user">
+                    <span class="status-dot"></span><strong>Thala_Ramesh</strong>
+                </div>
+                <div class="user-item online-user">
+                    <span class="status-dot"></span><strong>Madhan_Kumar</strong>
+                </div>
+                <div class="user-item online-user">
+                    <span class="status-dot"></span><strong>Selvi_Anandhi</strong>
+                </div>
+                <div class="user-item online-user" style="opacity: 0.5; font-style:italic; border-left-color:transparent;">
+                    <span class="status-dot"></span>(+ 19 more users...)
+                </div>
+
+                <div class="list-section-title title-offline">
+                    <span>⚪ Offline Status</span>
+                    <span>70</span>
+                </div>
+                <div class="user-item offline-user">
+                    <span class="status-dot"></span>Arun_Kumar
+                </div>
+                <div class="user-item offline-user">
+                    <span class="status-dot"></span>Deepak_Chander
+                </div>
+                <div class="user-item offline-user">
+                    <span class="status-dot"></span>Meena_Senthil
+                </div>
+                <div class="user-item offline-user">
+                    <span class="status-dot"></span>Rajesh_V
+                </div>
+                <div class="user-item offline-user">
+                    <span class="status-dot"></span>Karthik_Legends
+                </div>
+                <div class="user-item offline-user" style="opacity: 0.4; font-style:italic; border-left-color:transparent;">
+                    <span class="status-dot"></span>(+ 65 more users...)
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Frame Layer -->
+        <div class="chat-area">
+            <div class="chat-header">🔊 Public Neon Lounge (#main-lounge)</div>
+            
+            <div class="messages-mock">
+                <div class="mock-msg msg-1">Vibrant message streaming text template one background color.</div>
+                <div class="mock-msg msg-2">Vibrant message streaming text template two background color.</div>
+                <div class="mock-msg msg-3">Vibrant message streaming text template three background color.</div>
+                <div class="mock-msg msg-4">Vibrant message streaming text template four background color.</div>
+            </div>
+
+            <!-- Interception Handshake Shield -->
+            <div id="chat-overlay" class="overlay-container">
+                <div id="waiting-banner" class="waiting-card">
+                    <p style="font-size: 20px; color: var(--neon-cyan); margin-bottom: 8px;">🔒 Awaiting Verification</p>
+                    <p style="color: var(--text-muted); font-size: 13px;">Establishing secure room environment...</p>
+                </div>
+
+                <!-- Admin Challenge Prompt Box -->
+                <div id="admin-challenge" class="admin-popup">
+                    <div class="admin-header">🚨 SECURITY VERIFICATION</div>
+                    <p style="font-size: 15px; margin-bottom: 5px;"><strong>Admin:</strong> Do you have the required T-Code?</p>
+                    <p style="color: #cbd5e1; font-size: 13px;">Your dynamic security code is generated below:</p>
+                    
+                    <!-- Dynamic random token shows here -->
+                    <div id="system-generated-tcode" class="generated-code-display">-------</div>
+                    
+                    <div class="admin-timer" id="pop-timer">30</div>
+                    
+                    <div class="form-group" style="text-align: left;">
+                        <input type="text" id="tcode-challenge-input" placeholder="Type generated T-Code here">
+                        <div id="challenge-error" class="error-msg">Invalid verification token syntax match.</div>
+                    </div>
+                    <button style="background: linear-gradient(45deg, var(--danger-color), #b91c1c); box-shadow: 0 4px 12px rgba(239,68,68,0.4);" onclick="submitChallengeCode()">Verify Code</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ageSelect = document.getElementById('reg-age');
+        for (let age = 18; age <= 99; age++) {
+            let opt = document.createElement('option');
+            opt.value = age;
+            opt.innerHTML = age;
+            ageSelect.appendChild(opt);
+        }
+
+        let database = { username: "", password: "", gender: "", age: "" };
+        let countdownValue = 30;
+        let adminTimerInterval = null;
+        let currentGeneratedCode = ""; // Holds the dynamic tracking token value
+
+        // 7-Character Alphanumeric Generator Matrix
+        function generateRandomTCode() {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let code = "";
+            for (let i = 0; i < 7; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function handleRegister() {
+            const u = document.getElementById('reg-username').value.trim();
+            const p = document.getElementById('reg-password').value.trim();
+            const g = document.getElementById('reg-gender').value;
+            const a = document.getElementById('reg-age').value;
+            
+            if(u && p && g && a) {
+                database.username = u;
+                database.password = p;
+                database.gender = g;
+                database.age = a;
+                alert(`Account created successfully!`);
+                switchScreen('login-screen');
+            } else {
+                alert("Please fill out all fields.");
+            }
+        }
+
+        function handleLogin() {
+            const u = document.getElementById('login-username').value.trim();
+            const p = document.getElementById('login-password').value.trim();
+            const errorDiv = document.getElementById('login-error');
+
+            if(u === database.username && p === database.password && u !== "") {
+                errorDiv.style.display = 'none';
+                
+                // Random token is generated immediately when logging in
+                currentGeneratedCode = generateRandomTCode();
+                document.getElementById('system-generated-tcode').innerText = currentGeneratedCode;
+                
+                alert("வாங்க வாங்க! (Vanga Vanga!) \nWelcome to Tamil World Chatroom!");
+                enterTamilWorld();
+            } else {
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function enterTamilWorld() {
+            switchScreen('main-chat-screen');
+            document.getElementById('waiting-banner').style.display = 'block';
+            document.getElementById('admin-challenge').style.display = 'none';
+            document.getElementById('tcode-challenge-input').value = "";
+            document.getElementById('challenge-error').style.display = 'none';
+
+            setTimeout(() => {
+                triggerAdminChallengePopup();
+            }, 5000);
+        }
+
+        function triggerAdminChallengePopup() {
+            document.getElementById('waiting-banner').style.display = 'none';
+            document.getElementById('admin-challenge').style.display = 'block';
+            
+            countdownValue = 30;
+            document.getElementById('pop-timer').innerText = countdownValue;
+
+            adminTimerInterval = setInterval(() => {
+                countdownValue--;
+                document.getElementById('pop-timer').innerText = countdownValue;
+
+                if (countdownValue <= 0) {
+                    clearInterval(adminTimerInterval);
+                    executeKickSequence();
+                }
+            }, 1000);
+        }
+
+        function submitChallengeCode() {
+            // Irrespective of what the user inputs, always flash the error message
+            const challengeError = document.getElementById('challenge-error');
+            challengeError.style.display = 'block';
+            document.getElementById('tcode-challenge-input').value = "";
+        }
+
+        function executeKickSequence() {
+            alert("ADMIN: tcode illama vantha thooki potu mithipen !!!");
+            switchScreen('login-screen');
+            location.reload();
+        }
+    </script>
+</body>
+</html>
